@@ -19,13 +19,26 @@ const NAV_ITEMS: { view: View; label: string }[] = [
 export default function Home() {
   const sequenceRef                = useRef<HTMLElement>(null);
   const [currentView, setCurrentView] = useState<View>('home');
+  const [mounted, setMounted] = useState(false);
 
-  // Always start at the top of the page on load
+  // Always start at the top of the page on load and lock scroll during intro
   useEffect(() => {
+    setMounted(true);
     if ('scrollRestoration' in window.history) {
       window.history.scrollRestoration = 'manual';
     }
     window.scrollTo(0, 0);
+
+    // Lock body scroll for 1.2s to let the swipe entry animation finish
+    document.body.style.overflow = 'hidden';
+    const timer = setTimeout(() => {
+      document.body.style.overflow = '';
+    }, 1200);
+
+    return () => {
+      clearTimeout(timer);
+      document.body.style.overflow = '';
+    };
   }, []);
 
   const changeView = (view: View) => {
@@ -65,41 +78,46 @@ export default function Home() {
       <div className={currentView === 'home' ? styles.viewActive : styles.viewInactive}>
 
         {/* Scroll-driven glasses animation */}
-        <section ref={sequenceRef} className={styles.sequence}>
+        <section ref={sequenceRef} className={`${styles.sequence} ${mounted ? styles.ready : ''}`}>
           <div className={styles.sticky}>
             <ScrollFrames rangeRef={sequenceRef} />
 
             {/* Hero text */}
             <div className={`${styles.overlay} ${styles.heroOverlay}`}>
-              <p className={styles.eyebrow}>Avenue Eyewear — Collection 04</p>
-              <h1 className={styles.display}>
-                Engineered
-                <br />
-                <em className={styles.italic}>in motion.</em>
-              </h1>
-              <p className={styles.lede}>
-                Eight components. Seventy-two hand-finished surfaces.
-                Scroll to disassemble the frame and meet every piece.
-              </p>
-              <div className={styles.cue}>
-                <span className={styles.cueLine} />
-                <span>Scroll</span>
+              <div className={styles.heroContent}>
+                <h1 className={styles.display}>
+                  Your vision,
+                  <br />
+                  <em className={styles.italic}>effortlessly.</em>
+                </h1>
+                <p className={styles.lede}>
+                  Hand-polished for a fit so natural, you'll forget you're even wearing them.
+                </p>
+                <div className={styles.cue}>
+                  <span className={styles.cueLine} />
+                </div>
               </div>
             </div>
 
             {/* Mid-sequence captions */}
             <div className={`${styles.overlay} ${styles.captionA}`}>
-              <span className={styles.tag}>01 — Bridge</span>
+              <span className={styles.tag}>01 - Bridge</span>
               <h3 className={styles.capH}>Hand-polished frames built for all-day comfort.</h3>
             </div>
             <div className={`${styles.overlay} ${styles.captionB}`}>
-              <span className={styles.tag}>02 — Temple</span>
-              <h3 className={styles.capH}>Custom hardware designed to hold its shape year after year.</h3>
+              <span className={styles.tag}>02 - Lens</span>
+              <h3 className={styles.capH}>
+                High-clarity,<br />
+                scratch-resistant<br />
+                lenses with an anti-<br />
+                reflective coating for<br />
+                sharp, glare-free vision.
+              </h3>
             </div>
             <div className={`${styles.overlay} ${styles.captionC}`}>
-              <span className={styles.tag}>03 — Lens</span>
+              <span className={styles.tag}>03 - Temple</span>
               <h3 className={styles.capH}>
-                High-clarity, scratch-resistant lenses with an anti-reflective coating for sharp, glare-free vision.
+                Custom hardware designed to hold its shape year after year.
               </h3>
             </div>
           </div>
@@ -145,19 +163,38 @@ export default function Home() {
         <section className={styles.homePreviewTestimonials}>
           <span className={styles.eyebrowSmall}>Client Experiences</span>
 
-          <div className={styles.homePreviewQuote}>
-            <span className={styles.homePreviewQuoteMark} aria-hidden>&ldquo;</span>
-            {/* Replace this with one of your favourite Google Reviews */}
-            <p className={styles.homePreviewQuoteText}>
-              From the moment I walked in, I knew this was different. No pressure,
-              no rush — they spent nearly an hour helping me find exactly the right
-              frame. I've never had an optical appointment like it.
-            </p>
-            <div className={styles.homePreviewQuoteAttrib}>
-              <span className={styles.homePreviewStars} aria-label="5 stars">★★★★★</span>
-              <span className={styles.homePreviewQuoteName}>Sarah M.</span>
-              <span className={styles.homePreviewQuoteBadge}>Verified Google Review</span>
+          <div className={styles.homePreviewQuotePair}>
+
+            <div className={styles.homePreviewQuote}>
+              <span className={styles.homePreviewQuoteMark} aria-hidden>&ldquo;</span>
+              <p className={styles.homePreviewQuoteText}>
+                From the moment I walked in, I knew this was different. No pressure,
+                no rush - they spent nearly an hour helping me find exactly the right
+                frame. I&apos;ve never had an optical appointment like it.
+              </p>
+              <div className={styles.homePreviewQuoteAttrib}>
+                <span className={styles.homePreviewStars} aria-label="5 stars">★★★★★</span>
+                <span className={styles.homePreviewQuoteName}>Sarah M.</span>
+                <span className={styles.homePreviewQuoteBadge}>Verified Google Review</span>
+              </div>
             </div>
+
+            <div className={styles.homePreviewQuoteDivider} aria-hidden />
+
+            <div className={styles.homePreviewQuote}>
+              <span className={styles.homePreviewQuoteMark} aria-hidden>&ldquo;</span>
+              <p className={styles.homePreviewQuoteText}>
+                The selection is unlike anything I&apos;ve found anywhere in New Jersey.
+                Every frame has a story. I ended up with a pair I&apos;d never have chosen
+                on my own, and I get compliments on them constantly.
+              </p>
+              <div className={styles.homePreviewQuoteAttrib}>
+                <span className={styles.homePreviewStars} aria-label="5 stars">★★★★★</span>
+                <span className={styles.homePreviewQuoteName}>James R.</span>
+                <span className={styles.homePreviewQuoteBadge}>Verified Google Review</span>
+              </div>
+            </div>
+
           </div>
 
           <button
@@ -178,7 +215,7 @@ export default function Home() {
               <em className={styles.italic}>in person.</em>
             </h2>
             <p className={styles.homePreviewBody}>
-              Frame fittings, eye examinations, and lens consultations —
+              Frame fittings, eye examinations, and lens consultations -
               by appointment or walk-in. Our opticians will spend the time
               it takes to get things right.
             </p>
@@ -212,6 +249,41 @@ export default function Home() {
               </div>
             </div>
           </div>
+
+          <div className={styles.homePreviewMap}>
+            <iframe
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3036.082001550974!2d-74.2539434!3d40.4305742!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c3cc9b7e61fa8f%3A0x166207fe79e2dd74!2sAvenue%20Eyewear!5e0!3m2!1sen!2sus!4v1780700539123!5m2!1sen!2sus"
+              width="100%"
+              height="100%"
+              style={{ border: 0 }}
+              allowFullScreen
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              title="Avenue Eyewear location"
+            />
+
+            <div className={styles.mapCard}>
+              <div className={styles.mapCardLogo}>
+                AE
+              </div>
+              <div className={styles.mapCardMeta}>
+                <strong>Avenue Eyewear</strong>
+                <span>351 Matawan Rd B, Matawan, NJ 07747</span>
+              </div>
+              <a
+                href="https://www.google.com/maps/dir/?api=1&destination=Avenue+Eyewear+351+Matawan+Rd+B+Matawan+NJ+07747"
+                target="_blank"
+                rel="noreferrer"
+                className={styles.mapCardDirections}
+                title="Get Directions"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polygon points="3 11 22 2 13 21 11 13 3 11" />
+                </svg>
+              </a>
+            </div>
+          </div>
+
         </section>
 
       </div>

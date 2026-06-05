@@ -12,16 +12,19 @@ type Props = {
 
 export default function GlassesViewer({ onShow, onHide }: Props) {
   const mountRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     const mount = mountRef.current;
-    if (!mount) return;
+    const canvas = canvasRef.current;
+    if (!mount || !canvas) return;
 
     const W = mount.clientWidth  || window.innerWidth;
     const H = mount.clientHeight || window.innerHeight;
 
     // ── Renderer ──────────────────────────────────────────────────────────────
     const renderer = new THREE.WebGLRenderer({
+      canvas: canvas,
       alpha: true,
       antialias: true,
       powerPreference: 'high-performance',
@@ -43,7 +46,6 @@ export default function GlassesViewer({ onShow, onHide }: Props) {
     gl.style.pointerEvents = 'auto';
     gl.style.userSelect    = 'none';
     gl.style.cursor        = 'grab';
-    mount.appendChild(gl);
 
     // ── Scene & camera ────────────────────────────────────────────────────────
     const scene  = new THREE.Scene();
@@ -96,7 +98,7 @@ export default function GlassesViewer({ onShow, onHide }: Props) {
         const finalBox    = new THREE.Box3().setFromObject(pivot);
         const sphere      = finalBox.getBoundingSphere(new THREE.Sphere());
         const vFovRad     = (FOV * Math.PI) / 180;
-        const camZ        = (sphere.radius / Math.sin(vFovRad / 2)) * 1.38;
+        const camZ        = (sphere.radius / Math.sin(vFovRad / 2)) * 0.75;
 
         camera.position.set(0, 0, camZ);
         camera.lookAt(0, 0, 0);
@@ -227,7 +229,6 @@ export default function GlassesViewer({ onShow, onHide }: Props) {
       gl.removeEventListener('selectstart',   blockNative);
       gl.removeEventListener('contextmenu',   blockNative);
       renderer.dispose();
-      if (gl.parentNode === mount) mount.removeChild(gl);
     };
   }, [onShow, onHide]);
 
@@ -244,6 +245,18 @@ export default function GlassesViewer({ onShow, onHide }: Props) {
         touchAction:  'none',
         userSelect:   'none',
       }}
-    />
+    >
+      <canvas
+        ref={canvasRef}
+        style={{
+          position:     'absolute',
+          inset:        0,
+          width:        '100%',
+          height:       '100%',
+          display:      'block',
+          pointerEvents:'auto',
+        }}
+      />
+    </div>
   );
 }

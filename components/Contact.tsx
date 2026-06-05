@@ -74,7 +74,7 @@ export default function Contact() {
           </div>
 
           <a
-            href="https://www.google.com/maps/search/?api=1&query=Avenue+Eyewear+351+Matawan+Rd+B+Matawan+NJ+07747"
+            href="https://www.google.com/maps/place/Avenue+Eyewear/@40.4305742,-74.2539434,17z/data=!3m1!4b1!4m6!3m5!1s0x89c3cc9b7e61fa8f:0x166207fe79e2dd74!8m2!3d40.4305701!4d-74.2513685!16s%2Fg%2F11b6vjssvm"
             target="_blank"
             rel="noreferrer"
             className={styles.contactMapLink}

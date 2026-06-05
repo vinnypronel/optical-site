@@ -2,15 +2,9 @@
 
 import styles from '../app/page.module.css';
 
-/**
- * TESTIMONIALS — Replace the placeholder text below with your actual Google Reviews.
- * Each review object has:
- *   text  — the body of the review
- *   name  — reviewer's first name + last initial
- */
 const REVIEWS = [
   {
-    text: "From the moment I walked in, I knew this was different. No pressure, no rush — they spent nearly an hour helping me find exactly the right frame. I've never had an optical appointment like it, and I've been wearing glasses for fifteen years.",
+    text: "From the moment I walked in, I knew this was different. No pressure, no rush - they spent nearly an hour helping me find exactly the right frame. I've never had an optical appointment like it, and I've been wearing glasses for fifteen years.",
     name: 'Sarah M.',
   },
   {
@@ -45,7 +39,6 @@ export default function Testimonials() {
             {/* Large decorative open-quote */}
             <span className={styles.reviewQuoteMark} aria-hidden>&ldquo;</span>
 
-            {/* Review body — replace with your actual Google Review text */}
             <p className={styles.reviewText}>{review.text}</p>
 
             <div className={styles.reviewDivider} />

@@ -7,7 +7,7 @@ const FRAME_COUNT = 121;
 const FRAME_PATH = (i: number) =>
   `/frames/g_${String(i + 1).padStart(3, '0')}.webp`;
 const SCROLL_RESPONSE = 0.32;
-const RENDER_SCALE = 1.6;
+const RENDER_SCALE = 0.75;
 
 type Props = { rangeRef: React.RefObject<HTMLElement> };
 
@@ -144,6 +144,14 @@ export default function ScrollFrames({ rangeRef }: Props) {
       dw *= RENDER_SCALE;
       dh *= RENDER_SCALE;
       ctx.drawImage(img, (cw - dw) / 2, (ch - dh) / 2, dw, dh);
+
+      // Cover KlingAI watermark in the bottom-right corner of the frame
+      ctx.fillStyle = '#ddc7a0';
+      const coverW = dw * 0.080;
+      const coverH = dh * 0.038;
+      const coverX = (cw - dw) / 2 + dw * 0.905;
+      const coverY = (ch - dh) / 2 + dh * 0.931;
+      ctx.fillRect(coverX, coverY, coverW, coverH);
     };
 
     let raf = 0;
@@ -176,23 +184,25 @@ export default function ScrollFrames({ rangeRef }: Props) {
   const fullyLoaded = loaded >= FRAME_COUNT;
 
   return (
-    <div className="frames-stage" aria-hidden>
-      <canvas ref={canvasRef} className="frames-canvas" />
+    <>
+      <div className="frames-stage" aria-hidden>
+        <canvas ref={canvasRef} className="frames-canvas" />
 
-      {/* Three.js 3D viewer — hidden by default, shown on click+drag */}
-      <GlassesViewer
-        scrollProgressRef={scrollProgressValueRef}
-        onShow={handleGlassesShow}
-        onHide={handleGlassesHide}
-      />
+        {/* Three.js 3D viewer — hidden by default, shown on click+drag */}
+        <GlassesViewer
+          scrollProgressRef={scrollProgressValueRef}
+          onShow={handleGlassesShow}
+          onHide={handleGlassesHide}
+        />
 
-      <div className="frames-loader" data-done={fullyLoaded ? 'true' : 'false'}>
-        <span style={{ width: `${pct}%` }} />
+        <div className="frames-loader" data-done={fullyLoaded ? 'true' : 'false'}>
+          <span style={{ width: `${pct}%` }} />
+        </div>
       </div>
 
       <div className="frames-scroll-track">
         <span ref={scrollProgressRef} className="frames-scroll-fill" />
       </div>
-    </div>
+    </>
   );
 }
