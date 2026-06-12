@@ -9,15 +9,23 @@ const FRAME_PATH = (i: number) =>
 const SCROLL_RESPONSE = 0.32;
 const RENDER_SCALE = 0.75;
 
-type Props = { rangeRef: React.RefObject<HTMLElement> };
+type Props = {
+  rangeRef: React.RefObject<HTMLElement>;
+  isReady?: boolean;
+};
 
-export default function ScrollFrames({ rangeRef }: Props) {
+export default function ScrollFrames({ rangeRef, isReady = true }: Props) {
   const canvasRef           = useRef<HTMLCanvasElement>(null);
   const scrollProgressRef   = useRef<HTMLSpanElement>(null);
   const [loaded, setLoaded] = useState(0);
 
   const framesRef      = useRef<HTMLImageElement[]>([]);
   const loadedFlagsRef = useRef<boolean[]>([]);
+  const isReadyRef     = useRef(isReady);
+
+  useEffect(() => {
+    isReadyRef.current = isReady;
+  }, [isReady]);
 
   // ── Scroll value passed to GlassesViewer (kept for API compat) ────────────
   const scrollProgressValueRef = useRef<number>(0);
@@ -98,6 +106,11 @@ export default function ScrollFrames({ rangeRef }: Props) {
     let progress = 0;
 
     const computeTarget = () => {
+      if (!isReadyRef.current) {
+        progress = 0;
+        targetIndex = 0;
+        return;
+      }
       const vh = window.innerHeight;
       const sectionTop = range.offsetTop;
       const sectionH = range.offsetHeight;
@@ -159,7 +172,7 @@ export default function ScrollFrames({ rangeRef }: Props) {
       computeTarget();
 
       // Pass raw scroll Y to GlassesViewer (kept for compat)
-      scrollProgressValueRef.current = window.scrollY;
+      scrollProgressValueRef.current = isReadyRef.current ? window.scrollY : 0;
 
       currentIndex += (targetIndex - currentIndex) * SCROLL_RESPONSE;
       draw(currentIndex);

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, Fragment } from 'react';
 import ScrollFrames from '@/components/ScrollFrames';
 import About        from '@/components/About';
 import Testimonials from '@/components/Testimonials';
@@ -18,38 +18,156 @@ const NAV_ITEMS: { view: View; label: string }[] = [
 
 export default function Home() {
   const sequenceRef                = useRef<HTMLElement>(null);
+  const scrollAllowedRef           = useRef(false);
   const [currentView, setCurrentView] = useState<View>('home');
   const [mounted, setMounted] = useState(false);
+  const [transitionState, setTransitionState] = useState<'idle' | 'entering' | 'leaving'>('idle');
+  const [previewReviews, setPreviewReviews] = useState<any[]>([
+    {
+      reviewId: 'fallback-1',
+      authorName: 'Sarah M.',
+      rating: 5,
+      reviewText: "From the moment I walked in, I knew this was different. No pressure, no rush - they spent nearly an hour helping me find exactly the right frame. I've never had an optical appointment like it.",
+      originalGoogleUrl: 'https://www.google.com/maps/place/Avenue+Eyewear',
+    },
+    {
+      reviewId: 'fallback-2',
+      authorName: 'James R.',
+      rating: 5,
+      reviewText: "The selection is unlike anything I've found anywhere in New Jersey. Every frame has a story. I ended up with a pair I'd never have chosen on my own, and I get compliments on them constantly.",
+      originalGoogleUrl: 'https://www.google.com/maps/place/Avenue+Eyewear',
+    },
+  ]);
+
+  useEffect(() => {
+    async function loadPreviewReviews() {
+      try {
+        const res = await fetch('/api/reviews');
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        if (data.reviews && data.reviews.length > 0) {
+          const withText = data.reviews.filter((r: any) => r.reviewText && r.reviewText.trim().length > 0);
+          if (withText.length >= 2) {
+            setPreviewReviews(withText.slice(0, 2));
+          } else if (data.reviews.length >= 2) {
+            setPreviewReviews(data.reviews.slice(0, 2));
+          } else {
+            setPreviewReviews([data.reviews[0], previewReviews[1]]);
+          }
+        }
+      } catch (err) {
+        console.warn('[Home] Could not load preview reviews:', err);
+      }
+    }
+    loadPreviewReviews();
+  }, []);
 
   // Always start at the top of the page on load and lock scroll during intro
   useEffect(() => {
-    setMounted(true);
     if ('scrollRestoration' in window.history) {
       window.history.scrollRestoration = 'manual';
     }
+
+    // Force scroll position to 0 immediately
     window.scrollTo(0, 0);
 
-    // Lock body scroll for 1.2s to let the swipe entry animation finish
-    document.body.style.overflow = 'hidden';
-    const timer = setTimeout(() => {
+    // Repeatedly force scroll position to 0 over the first 100ms
+    // to override any browser-restored scrolls or layout shifts
+    let count = 0;
+    const scrollInterval = setInterval(() => {
+      window.scrollTo(0, 0);
+      count++;
+      if (count >= 15) {
+        clearInterval(scrollInterval);
+      }
+    }, 10);
+
+    // Lock body and html scroll after a brief moment to freeze at 0
+    const lockTimer = setTimeout(() => {
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+    }, 50);
+
+    // Intercept any programmatic scrolls and force back to 0 until user interacts
+    const handleScroll = () => {
+      if (!scrollAllowedRef.current) {
+        window.scrollTo(0, 0);
+      }
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    // Enable scroll once the user actually initiates a physical scroll/click gesture
+    const allowScroll = () => {
+      scrollAllowedRef.current = true;
+      window.removeEventListener('wheel', allowScroll);
+      window.removeEventListener('touchmove', allowScroll);
+      window.removeEventListener('keydown', allowScroll);
+      window.removeEventListener('mousedown', allowScroll);
+      window.removeEventListener('pointerdown', allowScroll);
+    };
+
+    // Unlock body and html scroll after the intro completes
+    const unlockTimer = setTimeout(() => {
       document.body.style.overflow = '';
-    }, 1200);
+      document.documentElement.style.overflow = '';
+      window.scrollTo(0, 0);
+      setMounted(true);
+
+      // Listen for physical user scroll input gestures
+      window.addEventListener('wheel', allowScroll, { passive: true });
+      window.addEventListener('touchmove', allowScroll, { passive: true });
+      window.addEventListener('keydown', allowScroll, { passive: true });
+      window.addEventListener('mousedown', allowScroll, { passive: true });
+      window.addEventListener('pointerdown', allowScroll, { passive: true });
+    }, 1220);
 
     return () => {
-      clearTimeout(timer);
+      clearInterval(scrollInterval);
+      clearTimeout(lockTimer);
+      clearTimeout(unlockTimer);
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('wheel', allowScroll);
+      window.removeEventListener('touchmove', allowScroll);
+      window.removeEventListener('keydown', allowScroll);
+      window.removeEventListener('mousedown', allowScroll);
+      window.removeEventListener('pointerdown', allowScroll);
       document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
     };
   }, []);
 
   const changeView = (view: View) => {
-    setCurrentView(view);
-    window.scrollTo({ top: 0, behavior: 'instant' });
-    // Let the layout settle before firing resize (important for scroll-canvas)
-    setTimeout(() => window.dispatchEvent(new Event('resize')), 80);
+    if (view === currentView) return;
+    setTransitionState('entering');
+
+    setTimeout(() => {
+      setCurrentView(view);
+      window.scrollTo({ top: 0, behavior: 'instant' });
+      // Let the layout settle before firing resize (important for scroll-canvas)
+      setTimeout(() => window.dispatchEvent(new Event('resize')), 80);
+      setTransitionState('leaving');
+
+      setTimeout(() => {
+        setTransitionState('idle');
+      }, 450);
+    }, 400);
   };
 
   return (
     <main className={styles.main}>
+
+      {/* ── Page Transition Shutter ────────────────────────────────────────── */}
+      <div className={`${styles.transitionOverlay} ${
+        transitionState === 'entering' ? styles.transitionEntering : ''
+      } ${
+        transitionState === 'leaving' ? styles.transitionLeaving : ''
+      } ${
+        transitionState !== 'idle' ? styles.transitionActive : ''
+      }`}>
+        <div className={styles.transitionBrand}>
+          AVENUE <span className={styles.brandThin}>EYEWEAR</span>
+        </div>
+      </div>
 
       {/* ── Global nav ─────────────────────────────────────────────────────── */}
       <nav className={styles.nav}>
@@ -80,7 +198,7 @@ export default function Home() {
         {/* Scroll-driven glasses animation */}
         <section ref={sequenceRef} className={`${styles.sequence} ${mounted ? styles.ready : ''}`}>
           <div className={styles.sticky}>
-            <ScrollFrames rangeRef={sequenceRef} />
+            <ScrollFrames rangeRef={sequenceRef} isReady={mounted} />
 
             {/* Hero text */}
             <div className={`${styles.overlay} ${styles.heroOverlay}`}>
@@ -164,37 +282,29 @@ export default function Home() {
           <span className={styles.eyebrowSmall}>Client Experiences</span>
 
           <div className={styles.homePreviewQuotePair}>
-
-            <div className={styles.homePreviewQuote}>
-              <span className={styles.homePreviewQuoteMark} aria-hidden>&ldquo;</span>
-              <p className={styles.homePreviewQuoteText}>
-                From the moment I walked in, I knew this was different. No pressure,
-                no rush - they spent nearly an hour helping me find exactly the right
-                frame. I&apos;ve never had an optical appointment like it.
-              </p>
-              <div className={styles.homePreviewQuoteAttrib}>
-                <span className={styles.homePreviewStars} aria-label="5 stars">★★★★★</span>
-                <span className={styles.homePreviewQuoteName}>Sarah M.</span>
-                <span className={styles.homePreviewQuoteBadge}>Verified Google Review</span>
-              </div>
-            </div>
-
-            <div className={styles.homePreviewQuoteDivider} aria-hidden />
-
-            <div className={styles.homePreviewQuote}>
-              <span className={styles.homePreviewQuoteMark} aria-hidden>&ldquo;</span>
-              <p className={styles.homePreviewQuoteText}>
-                The selection is unlike anything I&apos;ve found anywhere in New Jersey.
-                Every frame has a story. I ended up with a pair I&apos;d never have chosen
-                on my own, and I get compliments on them constantly.
-              </p>
-              <div className={styles.homePreviewQuoteAttrib}>
-                <span className={styles.homePreviewStars} aria-label="5 stars">★★★★★</span>
-                <span className={styles.homePreviewQuoteName}>James R.</span>
-                <span className={styles.homePreviewQuoteBadge}>Verified Google Review</span>
-              </div>
-            </div>
-
+            {previewReviews.map((review, i) => (
+              <Fragment key={review.reviewId}>
+                {i > 0 && <div className={styles.homePreviewQuoteDivider} aria-hidden />}
+                <a
+                  href={review.originalGoogleUrl || 'https://www.google.com/maps/place/Avenue+Eyewear/@40.4305742,-74.2539434,17z'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.homePreviewQuote}
+                >
+                  <span className={styles.homePreviewQuoteMark} aria-hidden>&ldquo;</span>
+                  <p className={styles.homePreviewQuoteText}>
+                    {review.reviewText || `${review.authorName} left a ${review.rating}-star rating.`}
+                  </p>
+                  <div className={styles.homePreviewQuoteAttrib}>
+                    <span className={styles.homePreviewStars} aria-label={`${review.rating} out of 5 stars`}>
+                      {'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}
+                    </span>
+                    <span className={styles.homePreviewQuoteName}>{review.authorName}</span>
+                    <span className={styles.homePreviewQuoteBadge}>Verified Google Review</span>
+                  </div>
+                </a>
+              </Fragment>
+            ))}
           </div>
 
           <button

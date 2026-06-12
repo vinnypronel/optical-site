@@ -6,19 +6,24 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "sync-reviews": "ts-node --project scripts/tsconfig.json scripts/sync-google-reviews.ts"
   },
   "dependencies": {
+    "dotenv": "^17.4.2",
     "next": "14.2.35",
+    "pg": "^8.21.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "three": "^0.169.0"
   },
   "devDependencies": {
-    "@types/node": "^20.16.10",
+    "@types/node": "^20.19.42",
+    "@types/pg": "^8.20.0",
     "@types/react": "^18.3.11",
     "@types/react-dom": "^18.3.0",
     "@types/three": "^0.169.0",
+    "ts-node": "^10.9.2",
     "typescript": "^5.6.2"
   }
 }

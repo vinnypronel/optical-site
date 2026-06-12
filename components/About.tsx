@@ -60,8 +60,6 @@ export default function About() {
         </div>
       </div>
 
-      <hr className={styles.sectionRule} />
-
       {/* ── Values ── */}
       <div className={styles.aboutValues}>
         {VALUES.map(({ n, title, body }) => (

@@ -14,18 +14,59 @@ const HOURS = [
 ];
 
 export default function Contact() {
-  const [form, setForm]   = useState({ name: '', email: '', message: '' });
+  const [form, setForm]   = useState({ name: '', email: '', phone: '', message: '' });
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [sent, setSent]   = useState(false);
   const [busy, setBusy]   = useState(false);
 
+  const handleFieldChange = (field: string, value: string) => {
+    setForm(f => ({ ...f, [field]: value }));
+    if (errors[field]) {
+      setErrors(errs => {
+        const next = { ...errs };
+        delete next[field];
+        return next;
+      });
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const newErrors: Record<string, string> = {};
+    if (!form.name.trim()) {
+      newErrors.name = 'Please fill out this field.';
+    }
+    if (!form.email.trim()) {
+      newErrors.email = 'Please fill out this field.';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      newErrors.email = 'Please enter a valid email address.';
+    }
+    if (!form.phone.trim()) {
+      newErrors.phone = 'Please fill out this field.';
+    }
+    if (!form.message.trim()) {
+      newErrors.message = 'Please fill out this field.';
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      // Focus the first invalid field
+      const firstErrorField = Object.keys(newErrors)[0];
+      const el = document.getElementById(`cf-${firstErrorField}`);
+      if (el) {
+        el.focus();
+      }
+      return;
+    }
+
+    setErrors({});
     setBusy(true);
     // Simulate network delay; wire up a real API route or Formspree endpoint here.
     await new Promise(r => setTimeout(r, 800));
     setSent(true);
     setBusy(false);
-    setForm({ name: '', email: '', message: '' });
+    setForm({ name: '', email: '', phone: '', message: '' });
   };
 
   return (
@@ -108,9 +149,10 @@ export default function Contact() {
                   autoComplete="name"
                   placeholder="Your name"
                   value={form.name}
-                  onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                  className={styles.contactInput}
+                  onChange={e => handleFieldChange('name', e.target.value)}
+                  className={`${styles.contactInput} ${errors.name ? styles.hasError : ''}`}
                 />
+                {errors.name && <span className={styles.contactError}>{errors.name}</span>}
               </div>
 
               <div className={styles.contactField}>
@@ -124,9 +166,27 @@ export default function Contact() {
                   autoComplete="email"
                   placeholder="your@email.com"
                   value={form.email}
-                  onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-                  className={styles.contactInput}
+                  onChange={e => handleFieldChange('email', e.target.value)}
+                  className={`${styles.contactInput} ${errors.email ? styles.hasError : ''}`}
                 />
+                {errors.email && <span className={styles.contactError}>{errors.email}</span>}
+              </div>
+
+              <div className={styles.contactField}>
+                <label className={styles.contactFieldLabel} htmlFor="cf-phone">
+                  Phone
+                </label>
+                <input
+                  id="cf-phone"
+                  type="tel"
+                  required
+                  autoComplete="tel"
+                  placeholder="Your phone number"
+                  value={form.phone}
+                  onChange={e => handleFieldChange('phone', e.target.value)}
+                  className={`${styles.contactInput} ${errors.phone ? styles.hasError : ''}`}
+                />
+                {errors.phone && <span className={styles.contactError}>{errors.phone}</span>}
               </div>
 
               <div className={styles.contactField}>
@@ -139,9 +199,10 @@ export default function Contact() {
                   rows={5}
                   placeholder="How can we help you?"
                   value={form.message}
-                  onChange={e => setForm(f => ({ ...f, message: e.target.value }))}
-                  className={styles.contactTextarea}
+                  onChange={e => handleFieldChange('message', e.target.value)}
+                  className={`${styles.contactTextarea} ${errors.message ? styles.hasError : ''}`}
                 />
+                {errors.message && <span className={styles.contactError}>{errors.message}</span>}
               </div>
 
               <button
