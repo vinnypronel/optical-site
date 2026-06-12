@@ -22,6 +22,19 @@ export default function Home() {
   const [currentView, setCurrentView] = useState<View>('home');
   const [mounted, setMounted] = useState(false);
   const [transitionState, setTransitionState] = useState<'idle' | 'entering' | 'leaving'>('idle');
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  // Lock background scroll when mobile hamburger menu is open
+  useEffect(() => {
+    if (!mounted) return;
+    if (isMenuOpen) {
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    }
+  }, [isMenuOpen, mounted]);
   const [previewReviews, setPreviewReviews] = useState<any[]>([
     {
       reviewId: 'fallback-1',
@@ -138,6 +151,7 @@ export default function Home() {
 
   const changeView = (view: View) => {
     if (view === currentView) return;
+    setIsMenuOpen(false);
     setTransitionState('entering');
 
     setTimeout(() => {
@@ -173,7 +187,10 @@ export default function Home() {
       <nav className={styles.nav}>
         <span
           className={styles.brand}
-          onClick={() => changeView('home')}
+          onClick={() => {
+            setIsMenuOpen(false);
+            changeView('home');
+          }}
           style={{ cursor: 'pointer' }}
         >
           AVENUE <span className={styles.brandThin}>EYEWEAR</span>
@@ -189,8 +206,42 @@ export default function Home() {
               {label}
             </li>
           ))}
+          <li className={styles.cta}>
+            <a href="tel:+17325832800">Call to Book</a>
+          </li>
         </ul>
+
+        <button
+          className={`${styles.hamburger} ${isMenuOpen ? styles.hamburgerActive : ''}`}
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+          aria-label="Toggle Menu"
+        >
+          <span className={styles.hamburgerBar} />
+          <span className={styles.hamburgerBar} />
+          <span className={styles.hamburgerBar} />
+        </button>
       </nav>
+
+      {/* ── Mobile Menu Overlay ────────────────────────────────────────────── */}
+      <div className={`${styles.mobileDrawer} ${isMenuOpen ? styles.mobileDrawerOpen : ''}`}>
+        <ul className={styles.mobileNavLinks}>
+          {NAV_ITEMS.map(({ view, label }) => (
+            <li
+              key={view}
+              onClick={() => {
+                setIsMenuOpen(false);
+                changeView(view);
+              }}
+              className={currentView === view ? styles.mobileNavLinkActive : ''}
+            >
+              {label}
+            </li>
+          ))}
+          <li className={styles.mobileCta} onClick={() => setIsMenuOpen(false)}>
+            <a href="tel:+17325832800">Call to Book</a>
+          </li>
+        </ul>
+      </div>
 
       {/* ── Home — scroll animation + editorial preview sections ─────────────── */}
       <div className={currentView === 'home' ? styles.viewActive : styles.viewInactive}>
@@ -279,7 +330,7 @@ export default function Home() {
 
         {/* ── TESTIMONIALS PREVIEW ──────────────────────────────────────────── */}
         <section className={styles.homePreviewTestimonials}>
-          <span className={styles.eyebrowSmall}>Client Experiences</span>
+          <span className={styles.eyebrowSmall}>Featured Reviews</span>
 
           <div className={styles.homePreviewQuotePair}>
             {previewReviews.map((review, i) => (
@@ -431,6 +482,11 @@ export default function Home() {
           <span>(732) 583-2800</span>
           <span>© {new Date().getFullYear()} Avenue Eyewear</span>
         </div>
+        <p className={styles.footDisclaimer}>
+          Ray-Ban® and Wayfarer® are registered trademarks of Luxottica Group S.p.A.
+          Product imagery is shown for illustrative purposes only and does not imply
+          affiliation with or endorsement by the trademark holders.
+        </p>
       </footer>
 
     </main>

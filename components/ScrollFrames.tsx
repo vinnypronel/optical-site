@@ -1,7 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
-import GlassesViewer from './GlassesViewer';
+import { useEffect, useRef, useState } from 'react';
 
 const FRAME_COUNT = 121;
 const FRAME_PATH = (i: number) =>
@@ -26,23 +25,6 @@ export default function ScrollFrames({ rangeRef, isReady = true }: Props) {
   useEffect(() => {
     isReadyRef.current = isReady;
   }, [isReady]);
-
-  // ── Scroll value passed to GlassesViewer (kept for API compat) ────────────
-  const scrollProgressValueRef = useRef<number>(0);
-
-  // ── Cross-fade: 2D canvas hides while 3D is active ────────────────────────
-  const handleGlassesShow = useCallback(() => {
-    if (canvasRef.current) {
-      canvasRef.current.style.transition = 'opacity 0.22s ease';
-      canvasRef.current.style.opacity    = '0';
-    }
-  }, []);
-  const handleGlassesHide = useCallback(() => {
-    if (canvasRef.current) {
-      canvasRef.current.style.transition = 'opacity 0.22s ease';
-      canvasRef.current.style.opacity    = '1';
-    }
-  }, []);
 
   // ── Preload every frame ──────────────────────────────────────────────────
   useEffect(() => {
@@ -159,20 +141,18 @@ export default function ScrollFrames({ rangeRef, isReady = true }: Props) {
       ctx.drawImage(img, (cw - dw) / 2, (ch - dh) / 2, dw, dh);
 
       // Cover KlingAI watermark in the bottom-right corner of the frame
+      // (oversized patch so it stays hidden at every viewport size)
       ctx.fillStyle = '#ddc7a0';
-      const coverW = dw * 0.080;
-      const coverH = dh * 0.038;
-      const coverX = (cw - dw) / 2 + dw * 0.905;
-      const coverY = (ch - dh) / 2 + dh * 0.931;
-      ctx.fillRect(coverX, coverY, coverW, coverH);
+      const coverW = dw * 0.125;
+      const coverH = dh * 0.075;
+      const coverX = (cw - dw) / 2 + dw * 0.880;
+      const coverY = (ch - dh) / 2 + dh * 0.910;
+      ctx.fillRect(coverX, coverY, coverW + 2, coverH + 2);
     };
 
     let raf = 0;
     const tick = () => {
       computeTarget();
-
-      // Pass raw scroll Y to GlassesViewer (kept for compat)
-      scrollProgressValueRef.current = isReadyRef.current ? window.scrollY : 0;
 
       currentIndex += (targetIndex - currentIndex) * SCROLL_RESPONSE;
       draw(currentIndex);
@@ -200,13 +180,6 @@ export default function ScrollFrames({ rangeRef, isReady = true }: Props) {
     <>
       <div className="frames-stage" aria-hidden>
         <canvas ref={canvasRef} className="frames-canvas" />
-
-        {/* Three.js 3D viewer — hidden by default, shown on click+drag */}
-        <GlassesViewer
-          scrollProgressRef={scrollProgressValueRef}
-          onShow={handleGlassesShow}
-          onHide={handleGlassesHide}
-        />
 
         <div className="frames-loader" data-done={fullyLoaded ? 'true' : 'false'}>
           <span style={{ width: `${pct}%` }} />

@@ -189,7 +189,7 @@ export default function Testimonials() {
       {/* ── Header ── */}
       <header id="testimonials-header" className={`${styles.sectionHero} ${styles.testimonialsHero}`}>
         <div>
-          <span className={styles.eyebrowSmall}>Client Experiences</span>
+          <span className={styles.eyebrowSmall}>Featured Reviews</span>
           <h1 className={styles.sectionHeroTitle}>
             In their
             <br />

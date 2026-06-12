@@ -26,7 +26,7 @@ export default function About() {
 
       {/* ── Header ── */}
       <header className={styles.sectionHero}>
-        <span className={styles.eyebrowSmall}>Est. - Matawan, New Jersey</span>
+        <span className={styles.eyebrowSmall}>Est. 2020 - Matawan, New Jersey</span>
         <h1 className={styles.sectionHeroTitle}>
           A different kind
           <br />

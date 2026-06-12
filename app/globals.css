@@ -13,6 +13,8 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 html,
@@ -23,15 +25,10 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: clip;
-  /* Hide scrollbar (Firefox) */
-  scrollbar-width: none;
-  /* Hide scrollbar (legacy Edge / IE) */
-  -ms-overflow-style: none;
 }
 
-/* Hide scrollbar (Chromium / Safari) — scrolling still works. */
-html::-webkit-scrollbar,
-body::-webkit-scrollbar {
+/* Hide scrollbar globally (Chromium / Safari) — scrolling still works. */
+::-webkit-scrollbar {
   width: 0;
   height: 0;
   display: none;

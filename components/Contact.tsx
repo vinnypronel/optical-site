@@ -137,6 +137,7 @@ export default function Contact() {
             </div>
           ) : (
             <form className={styles.contactForm} onSubmit={handleSubmit} noValidate>
+              <h2 className={styles.contactFormTitle}>Reach Out</h2>
 
               <div className={styles.contactField}>
                 <label className={styles.contactFieldLabel} htmlFor="cf-name">
