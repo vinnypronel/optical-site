@@ -5,7 +5,6 @@ import { useEffect, useRef, useState } from 'react';
 const FRAME_COUNT = 121;
 const FRAME_PATH = (i: number) =>
   `/frames/g_${String(i + 1).padStart(3, '0')}.webp`;
-const SCROLL_RESPONSE = 0.32;
 const RENDER_SCALE = 0.75;
 
 type Props = {
@@ -69,6 +68,8 @@ export default function ScrollFrames({ rangeRef, isReady = true }: Props) {
     let cw = 0;
     let ch = 0;
 
+    let scrollResponse = window.innerWidth <= 820 ? 0.6 : 0.38;
+
     const resize = () => {
       const rect = canvas.getBoundingClientRect();
       dpr = Math.min(window.devicePixelRatio || 1, 2.5);
@@ -79,13 +80,10 @@ export default function ScrollFrames({ rangeRef, isReady = true }: Props) {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';
+      scrollResponse = window.innerWidth <= 820 ? 0.6 : 0.38;
     };
     resize();
     window.addEventListener('resize', resize);
-
-    let currentIndex = 0;
-    let targetIndex = 0;
-    let progress = 0;
 
     const computeTarget = () => {
       if (!isReadyRef.current) {
@@ -154,7 +152,7 @@ export default function ScrollFrames({ rangeRef, isReady = true }: Props) {
     const tick = () => {
       computeTarget();
 
-      currentIndex += (targetIndex - currentIndex) * SCROLL_RESPONSE;
+      currentIndex += (targetIndex - currentIndex) * scrollResponse;
       draw(currentIndex);
 
       if (scrollProgressRef.current) {

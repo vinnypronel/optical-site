@@ -31,6 +31,7 @@ export default function Home() {
   const captionARef                = useRef<HTMLDivElement>(null);
   const captionBRef                = useRef<HTMLDivElement>(null);
   const captionCRef                = useRef<HTMLDivElement>(null);
+  const heroOverlayRef             = useRef<HTMLDivElement>(null);
   const [currentView, setCurrentView] = useState<View>('home');
   const [mounted, setMounted] = useState(false);
   const [transitionState, setTransitionState] = useState<'idle' | 'entering' | 'leaving'>('idle');
@@ -176,12 +177,31 @@ export default function Home() {
     captions.forEach(({ ref }) => {
       if (ref.current) ref.current.style.transition = 'opacity 0.35s ease, transform 0.35s ease';
     });
+    if (heroOverlayRef.current) {
+      heroOverlayRef.current.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+    }
 
     const update = () => {
       const vh = window.innerHeight;
       const sectionTop = range.offsetTop;
       const sectionH = range.offsetHeight;
       const progress = Math.max(0, Math.min(1, (window.scrollY - sectionTop) / (sectionH - vh)));
+
+      // Fade hero out before captions appear
+      const hero = heroOverlayRef.current;
+      if (hero) {
+        if (progress < 0.21) {
+          hero.style.opacity = '1';
+          hero.style.transform = 'translateY(0)';
+        } else if (progress >= 0.29) {
+          hero.style.opacity = '0';
+          hero.style.transform = 'translateY(-20px)';
+        } else {
+          const t = (progress - 0.21) / 0.08;
+          hero.style.opacity = String(1 - t);
+          hero.style.transform = `translateY(${-20 * t}px)`;
+        }
+      }
 
       captions.forEach(({ ref, inAt, outAt }) => {
         const el = ref.current;
@@ -319,7 +339,7 @@ export default function Home() {
             <ScrollFrames rangeRef={sequenceRef} isReady={mounted} />
 
             {/* Hero text */}
-            <div className={`${styles.overlay} ${styles.heroOverlay}`}>
+            <div ref={heroOverlayRef} className={`${styles.overlay} ${styles.heroOverlay}`}>
               <div className={styles.heroContent}>
                 <h1 className={styles.display}>
                   <span className={styles.nowrap}>Your vision,</span>

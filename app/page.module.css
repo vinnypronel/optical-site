@@ -1953,7 +1953,7 @@
 }
 
 @media (max-width: 540px) {
-  .sticky :global(.frames-stage) { transform: translateY(6vh) scale(1.3); }
+  .sticky :global(.frames-stage) { transform: translateY(4vh) scale(1.55); }
   .nav {
     padding: 14px 16px 10px;
   }
