@@ -28,6 +28,9 @@ const NAV_ITEMS: { view: View; label: string }[] = [
 export default function Home() {
   const sequenceRef                = useRef<HTMLElement>(null);
   const scrollAllowedRef           = useRef(false);
+  const captionARef                = useRef<HTMLDivElement>(null);
+  const captionBRef                = useRef<HTMLDivElement>(null);
+  const captionCRef                = useRef<HTMLDivElement>(null);
   const [currentView, setCurrentView] = useState<View>('home');
   const [mounted, setMounted] = useState(false);
   const [transitionState, setTransitionState] = useState<'idle' | 'entering' | 'leaving'>('idle');
@@ -156,6 +159,46 @@ export default function Home() {
       document.body.style.overflow = '';
       document.documentElement.style.overflow = '';
     };
+  }, []);
+
+  // Fallback for browsers without animation-timeline: scroll() (e.g. iOS Safari < 18)
+  useEffect(() => {
+    if (typeof CSS !== 'undefined' && CSS.supports?.('animation-timeline', 'scroll()')) return;
+    const range = sequenceRef.current;
+    if (!range) return;
+
+    const captions = [
+      { ref: captionARef, inAt: 0.30, outAt: 0.48 },
+      { ref: captionBRef, inAt: 0.50, outAt: 0.67 },
+      { ref: captionCRef, inAt: 0.69, outAt: 0.86 },
+    ];
+
+    captions.forEach(({ ref }) => {
+      if (ref.current) ref.current.style.transition = 'opacity 0.35s ease, transform 0.35s ease';
+    });
+
+    const update = () => {
+      const vh = window.innerHeight;
+      const sectionTop = range.offsetTop;
+      const sectionH = range.offsetHeight;
+      const progress = Math.max(0, Math.min(1, (window.scrollY - sectionTop) / (sectionH - vh)));
+
+      captions.forEach(({ ref, inAt, outAt }) => {
+        const el = ref.current;
+        if (!el) return;
+        if (progress >= inAt && progress < outAt) {
+          el.style.opacity = '1';
+          el.style.transform = 'translateY(0)';
+        } else {
+          el.style.opacity = '0';
+          el.style.transform = progress < inAt ? 'translateY(22px)' : 'translateY(-22px)';
+        }
+      });
+    };
+
+    window.addEventListener('scroll', update, { passive: true });
+    update();
+    return () => window.removeEventListener('scroll', update);
   }, []);
 
   const changeView = (view: View) => {
@@ -293,11 +336,11 @@ export default function Home() {
             </div>
 
             {/* Mid-sequence captions */}
-            <div className={`${styles.overlay} ${styles.captionA}`}>
+            <div ref={captionARef} className={`${styles.overlay} ${styles.captionA}`}>
               <span className={styles.tag}>01 - Bridge</span>
               <h3 className={styles.capH}>Hand-polished frames built for all-day comfort.</h3>
             </div>
-            <div className={`${styles.overlay} ${styles.captionB}`}>
+            <div ref={captionBRef} className={`${styles.overlay} ${styles.captionB}`}>
               <span className={styles.tag}>02 - Lens</span>
               <h3 className={styles.capH}>
                 High-clarity,<br />
@@ -307,7 +350,7 @@ export default function Home() {
                 sharp, glare-free vision.
               </h3>
             </div>
-            <div className={`${styles.overlay} ${styles.captionC}`}>
+            <div ref={captionCRef} className={`${styles.overlay} ${styles.captionC}`}>
               <span className={styles.tag}>03 - Temple</span>
               <h3 className={styles.capH}>
                 Custom hardware designed to hold its shape year after year.
