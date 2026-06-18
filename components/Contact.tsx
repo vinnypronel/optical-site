@@ -2,16 +2,7 @@
 
 import { useState } from 'react';
 import styles from '../app/page.module.css';
-
-const HOURS = [
-  { day: 'Mon',     time: 'Closed'       },
-  { day: 'Tue',     time: '11:00 – 6:00' },
-  { day: 'Wed',     time: '11:00 – 5:00' },
-  { day: 'Thu',     time: 'Closed'       },
-  { day: 'Fri',     time: '10:00 – 3:00' },
-  { day: 'Sat',     time: 'Closed'       },
-  { day: 'Sun',     time: 'Closed'       },
-];
+import { BUSINESS, HOURS } from '../lib/business';
 
 export default function Contact() {
   const [form, setForm]   = useState({ name: '', email: '', phone: '', message: '' });
@@ -89,16 +80,16 @@ export default function Contact() {
 
           <div className={styles.contactBlock}>
             <span className={styles.contactLabel}>Phone</span>
-            <a href="tel:+17325832800" className={styles.contactValueLink}>
-              (732) 583-2800
+            <a href={BUSINESS.phoneHref} className={styles.contactValueLink}>
+              {BUSINESS.phone}
             </a>
           </div>
 
           <div className={styles.contactBlock}>
             <span className={styles.contactLabel}>Address</span>
             <address className={styles.contactAddress}>
-              351 Matawan Rd&nbsp;B<br />
-              Matawan, NJ 07747
+              {BUSINESS.street}<br />
+              {BUSINESS.city}, {BUSINESS.region} {BUSINESS.postal}
             </address>
           </div>
 
@@ -111,6 +102,28 @@ export default function Contact() {
                   <span>{time}</span>
                 </div>
               ))}
+            </div>
+          </div>
+
+          <div className={styles.contactBlock}>
+            <span className={styles.contactLabel}>Social</span>
+            <div className={styles.contactSocials}>
+              <a
+                href="https://www.instagram.com/explore/locations/1018925198/avenue-eyewear/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.contactSocialLink}
+              >
+                Instagram
+              </a>
+              <a
+                href="https://www.facebook.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.contactSocialLink}
+              >
+                Facebook
+              </a>
             </div>
           </div>
 

@@ -5,7 +5,16 @@ import ScrollFrames from '@/components/ScrollFrames';
 import About        from '@/components/About';
 import Testimonials from '@/components/Testimonials';
 import Contact      from '@/components/Contact';
+import { BUSINESS, HOURS } from '@/lib/business';
 import styles from './page.module.css';
+
+// Enter/Space activate handler for elements acting as buttons
+const onKeyActivate = (fn: () => void) => (e: React.KeyboardEvent) => {
+  if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    fn();
+  }
+};
 
 type View = 'home' | 'about' | 'testimonials' | 'contact';
 
@@ -168,7 +177,7 @@ export default function Home() {
   };
 
   return (
-    <main className={styles.main}>
+    <main id="main" className={styles.main}>
 
       {/* ── Page Transition Shutter ────────────────────────────────────────── */}
       <div className={`${styles.transitionOverlay} ${
@@ -184,13 +193,17 @@ export default function Home() {
       </div>
 
       {/* ── Global nav ─────────────────────────────────────────────────────── */}
-      <nav className={styles.nav}>
+      <nav className={styles.nav} aria-label="Primary">
         <span
           className={styles.brand}
+          role="button"
+          tabIndex={0}
+          aria-label="Avenue Eyewear — home"
           onClick={() => {
             setIsMenuOpen(false);
             changeView('home');
           }}
+          onKeyDown={onKeyActivate(() => { setIsMenuOpen(false); changeView('home'); })}
           style={{ cursor: 'pointer' }}
         >
           AVENUE <span className={styles.brandThin}>EYEWEAR</span>
@@ -200,14 +213,18 @@ export default function Home() {
           {NAV_ITEMS.map(({ view, label }) => (
             <li
               key={view}
+              role="button"
+              tabIndex={0}
+              aria-current={currentView === view ? 'page' : undefined}
               onClick={() => changeView(view)}
+              onKeyDown={onKeyActivate(() => changeView(view))}
               className={currentView === view ? styles.navLinkActive : ''}
             >
               {label}
             </li>
           ))}
           <li className={styles.cta}>
-            <a href="tel:+17325832800">Call to Book</a>
+            <a href={BUSINESS.phoneHref}>Call to Book</a>
           </li>
         </ul>
 
@@ -223,22 +240,29 @@ export default function Home() {
       </nav>
 
       {/* ── Mobile Menu Overlay ────────────────────────────────────────────── */}
-      <div className={`${styles.mobileDrawer} ${isMenuOpen ? styles.mobileDrawerOpen : ''}`}>
+      <div
+        className={`${styles.mobileDrawer} ${isMenuOpen ? styles.mobileDrawerOpen : ''}`}
+        aria-hidden={!isMenuOpen}
+      >
         <ul className={styles.mobileNavLinks}>
           {NAV_ITEMS.map(({ view, label }) => (
             <li
               key={view}
+              role="button"
+              tabIndex={isMenuOpen ? 0 : -1}
+              aria-current={currentView === view ? 'page' : undefined}
               onClick={() => {
                 setIsMenuOpen(false);
                 changeView(view);
               }}
+              onKeyDown={onKeyActivate(() => { setIsMenuOpen(false); changeView(view); })}
               className={currentView === view ? styles.mobileNavLinkActive : ''}
             >
               {label}
             </li>
           ))}
           <li className={styles.mobileCta} onClick={() => setIsMenuOpen(false)}>
-            <a href="tel:+17325832800">Call to Book</a>
+            <a href={BUSINESS.phoneHref} tabIndex={isMenuOpen ? 0 : -1}>Call to Book</a>
           </li>
         </ul>
       </div>
@@ -255,7 +279,7 @@ export default function Home() {
             <div className={`${styles.overlay} ${styles.heroOverlay}`}>
               <div className={styles.heroContent}>
                 <h1 className={styles.display}>
-                  Your vision,
+                  <span className={styles.nowrap}>Your vision,</span>
                   <br />
                   <em className={styles.italic}>effortlessly.</em>
                 </h1>
@@ -371,7 +395,7 @@ export default function Home() {
           <div className={styles.homePreviewContactLeft}>
             <span className={styles.eyebrowSmall}>Visit Us</span>
             <h2 className={styles.homePreviewTitle}>
-              Come see us
+              <span className={styles.nowrap}>Come see us</span>
               <br />
               <em className={styles.italic}>in person.</em>
             </h2>
@@ -397,16 +421,37 @@ export default function Home() {
             </div>
             <div className={styles.homePreviewContactItem}>
               <span className={styles.contactLabel}>Phone</span>
-              <a href="tel:+17325832800" className={styles.homePreviewPhone}>
-                (732) 583-2800
+              <a href={BUSINESS.phoneHref} className={styles.homePreviewPhone}>
+                {BUSINESS.phone}
               </a>
             </div>
             <div className={styles.homePreviewContactItem}>
               <span className={styles.contactLabel}>Hours</span>
               <div className={styles.homePreviewHours}>
-                <span>Tue&nbsp;&nbsp;11:00 – 6:00</span>
-                <span>Wed&nbsp;11:00 – 5:00</span>
-                <span>Fri&nbsp;&nbsp;&nbsp;10:00 – 3:00</span>
+                {HOURS.filter(h => h.time !== 'Closed').map(({ day, time }) => (
+                  <span key={day}>{day}&nbsp;&nbsp;{time}</span>
+                ))}
+              </div>
+            </div>
+            <div className={styles.homePreviewContactItem}>
+              <span className={styles.contactLabel}>Social</span>
+              <div className={styles.homePreviewSocials}>
+                <a
+                  href="https://www.instagram.com/explore/locations/1018925198/avenue-eyewear/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.homePreviewSocialLink}
+                >
+                  Instagram
+                </a>
+                <a
+                  href="https://www.facebook.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.homePreviewSocialLink}
+                >
+                  Facebook
+                </a>
               </div>
             </div>
           </div>
@@ -467,19 +512,41 @@ export default function Home() {
 
       {/* ── Global footer ──────────────────────────────────────────────────── */}
       <footer className={styles.footer}>
-        <div className={styles.footCol}>
-          <div
-            className={styles.footBrand}
-            onClick={() => changeView('home')}
-            style={{ cursor: 'pointer' }}
-          >
+        <div
+          className={styles.footCol}
+          role="button"
+          tabIndex={0}
+          aria-label="Avenue Eyewear — home"
+          onClick={() => changeView('home')}
+          onKeyDown={onKeyActivate(() => changeView('home'))}
+          style={{ cursor: 'pointer' }}
+        >
+          <div className={styles.footBrand}>
             AVENUE <span className={styles.brandThin}>EYEWEAR</span>
           </div>
           <p className={styles.footTag}>Independent optical · Matawan, NJ</p>
         </div>
+        <div className={styles.footSocials}>
+          <a
+            href="https://www.instagram.com/explore/locations/1018925198/avenue-eyewear/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={styles.footSocialLink}
+          >
+            Instagram
+          </a>
+          <a
+            href="https://www.facebook.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={styles.footSocialLink}
+          >
+            Facebook
+          </a>
+        </div>
         <div className={styles.footMeta}>
-          <span>351 Matawan Rd B, Matawan, NJ 07747</span>
-          <span>(732) 583-2800</span>
+          <span>{BUSINESS.street}, {BUSINESS.city}, {BUSINESS.region} {BUSINESS.postal}</span>
+          <a href={BUSINESS.phoneHref}>{BUSINESS.phone}</a>
           <span>© {new Date().getFullYear()} Avenue Eyewear</span>
         </div>
         <p className={styles.footDisclaimer}>
