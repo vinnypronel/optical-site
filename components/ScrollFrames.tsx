@@ -69,6 +69,9 @@ export default function ScrollFrames({ rangeRef, isReady = true }: Props) {
     let ch = 0;
 
     let scrollResponse = window.innerWidth <= 820 ? 0.6 : 0.38;
+    let progress = 0;
+    let targetIndex = 0;
+    let currentIndex = 0;
 
     const resize = () => {
       const rect = canvas.getBoundingClientRect();
